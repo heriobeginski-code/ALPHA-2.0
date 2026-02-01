@@ -6,20 +6,20 @@ export const appData = {
         clients: ["Video Client A", "Video Client B", "App Dev Sync"]
     },
     weeklyPlanner: {
-        MON: { mission: "Run + Video Client A (Vid 1/1)", length: "1-2 Hours" },
-        TUE: { mission: "Gym (Arms/Back/Core) + App Dev", length: "2-3 Hours" },
-        WED: { mission: "Run + Video Client B (Vid 1/2)", length: "1-2 Hours" },
-        THU: { mission: "Gym (Legs) + App Dev", length: "2-3 Hours" },
-        FRI: { mission: "Run + Video Client B (Vid 2/2)", length: "1-2 Hours" },
-        SAT: { mission: "Planning & Review + Course Prep", length: "2-4 Hours" },
-        SUN: { mission: "Gym (Pilates) + Job/Grant Apps", length: "2 Hours" }
+        MON: { mission: "Run + Video Client A", length: "1-2h" },
+        TUE: { mission: "Gym + App Dev", length: "2-3h" },
+        WED: { mission: "Run + Video Client B", length: "1-2h" },
+        THU: { mission: "Gym + App Dev", length: "2-3h" },
+        FRI: { mission: "Run + Video Client B", length: "1-2h" },
+        SAT: { mission: "Review + Prep", length: "2-4h" },
+        SUN: { mission: "Gym + Job Apps", length: "2h" }
     },
-    study: {
-        math: { name: "Mathematics", url: "https://www.khanacademy.org/math/" },
-        ai: { name: "AI Specialization", url: "https://platform.outskill.com/" },
-        lang: { name: "Language Protocol", url: "https://learn.mangolanguages.com/login" },
-        write: { name: "Writing Analysis", url: "#" }
-    },
+    study: [
+        { name: "Mathematics", url: "https://www.khanacademy.org/math/" },
+        { name: "AI Specialization", url: "https://platform.outskill.com/" },
+        { name: "Language Protocol", url: "https://learn.mangolanguages.com/login" },
+        { name: "Writing Analysis", url: "#" }
+    ],
     subscriptions: [
         { name: "Perplexity", url: "https://www.perplexity.ai/" },
         { name: "Canva", url: "https://www.canva.com/" },
