@@ -1,147 +1,263 @@
-<script type="module">
-    import { GoogleGenerativeAI } from "@google/generative-ai";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE GRID | CORE_OMNI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&family=Roboto+Mono:wght@300;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --neon: #00E5FF; --bg: #020617; }
+        body { background-color: var(--bg); color: #f8fafc; font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; }
 
-    const appData = {
-        taskBank: {
-            work: ["Instagram – Light", "AI Course", "Outreach", "Email Wipe"],
-            chores: ["Deep Clean", "House Tidy", "Pets – Daily", "Laundry"],
-            clients: ["Client A", "Client B", "Strategy Sync"]
-        },
-        study: [
-            { name: "Mathematics", desc: "Logic & Quant structures" },
-            { name: "AI Specialization", desc: "Neural Architecture & LLMs" },
-            { name: "Language Protocol", desc: "Linguistic expansion" },
-            { name: "NotebookLM", desc: "Cross-reference Study Vault" }
-        ],
-        subscriptions: [
-            { name: "Perp", url: "https://www.perplexity.ai/" }, { name: "Open", url: "https://openai.com/" },
-            { name: "Bolt", url: "https://bolt.new/" }, { name: "Lova", url: "https://lovable.dev" },
-            { name: "Vapi", url: "https://dashboard.vapi.ai/" }, { name: "HeyG", url: "https://app.heygen.com/" },
-            { name: "Sonic", url: "https://app.writesonic.com/" }, { name: "Rete", url: "https://www.retellai.com/" },
-            { name: "n8n", url: "https://n8n.io/" }
-        ]
-    };
-
-    let state = JSON.parse(localStorage.getItem('gridTasks')) || { dailyFocus: [] };
-    let apiKey = localStorage.getItem('gemini_key') || '';
-
-    function save() { localStorage.setItem('gridTasks', JSON.stringify(state)); render(); }
-
-    window.toggleMode = (mode) => {
-        document.getElementById('hub-view').classList.toggle('hidden', mode === 'study');
-        document.getElementById('study-view').classList.toggle('hidden', mode === 'hub');
-    };
-
-    // --- UPDATED GEMINI INTERFACE ---
-    async function runGemini() {
-        const inputField = document.getElementById('ai-input');
-        const output = document.getElementById('chat-output');
-        const userKey = document.getElementById('api-key').value || apiKey;
-
-        if (!userKey) return alert("ACCESS_DENIED: API_KEY_REQUIRED");
-        if (!inputField.value || inputField.value === "PROCESSING...") return;
-
-        const userMsg = inputField.value;
-        output.innerHTML += `<div class="mb-4 border-l-2 border-slate-700 pl-4 py-2"><span class="text-slate-500">[USER]:</span> ${userMsg}</div>`;
-        inputField.value = "PROCESSING...";
-
-        try {
-            const genAI = new GoogleGenerativeAI(userKey);
-            // Reverted to standard stable model string
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            
-            const result = await model.generateContent(userMsg);
-            const response = await result.response.text();
-            
-            // Log response with a slight delay for "hacker" feel
-            output.innerHTML += `
-                <div class="mb-4 bg-cyan-950/20 p-4 rounded-lg border border-cyan-500/10">
-                    <span class="text-cyan-400 font-bold">[GEMINI_SYSTEM]:</span><br>
-                    ${response.replace(/\n/g, '<br>')}
-                </div>`;
-            output.scrollTop = output.scrollHeight;
-        } catch (err) {
-            console.error(err);
-            output.innerHTML += `<div class="text-red-500 p-2 border border-red-900/50 rounded mb-4">CRITICAL_ERROR: ${err.message}</div>`;
-        } finally {
-            inputField.value = "";
-            inputField.focus();
+        /* FIXED ANIMATED AURORA */
+        .aurora-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: radial-gradient(circle at 20% 30%, rgba(0, 229, 255, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(0, 229, 255, 0.1) 0%, transparent 50%);
+            animation: aurora-move 12s ease-in-out infinite alternate;
         }
-    }
+        @keyframes aurora-move {
+            0% { transform: scale(1) translate(0, 0); opacity: 0.6; }
+            100% { transform: scale(1.15) translate(3%, 2%); opacity: 0.9; }
+        }
 
-    function render() {
-        // Calendar
-        const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-        const today = days[new Date().getDay()];
-        document.getElementById('calendar-bar').innerHTML = days.map(day => `
-            <div class="flex flex-col items-center">
-                <span class="${day === today ? 'text-cyan-400 font-bold' : 'text-slate-700'}">${day}</span>
-                <div class="w-1 h-1 rounded-full mt-2 ${day === today ? 'bg-cyan-400 shadow-[0_0_8px_#00E5FF]' : 'bg-transparent'}"></div>
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 229, 255, 0.1); border-top: 2px solid rgba(0, 229, 255, 0.3);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .glass-panel:hover { border-color: var(--neon); box-shadow: 0 0 30px rgba(0, 229, 255, 0.1); }
+        .hidden { display: none !important; }
+        .mono { font-family: 'Roboto Mono', monospace; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.2); border-radius: 10px; }
+
+        /* Scanline HUD Effect */
+        .scanlines {
+            position: fixed; inset: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            z-index: 999; pointer-events: none; opacity: 0.15;
+        }
+    </style>
+</head>
+<body class="selection:bg-cyan-500/30">
+    <div class="aurora-bg"></div>
+    <div class="scanlines"></div>
+
+    <div id="hub-view">
+        <header class="border-b border-cyan-900/30 p-8 sticky top-0 bg-slate-950/60 backdrop-blur-md z-50">
+            <div class="max-w-7xl mx-auto flex justify-between items-end">
+                <div>
+                    <h1 class="mono text-[10px] tracking-[0.6em] text-cyan-500 uppercase font-bold mb-1">System_Interface</h1>
+                    <p class="text-4xl font-extralight tracking-tighter italic">ALPHA <span class="text-cyan-400 font-bold">2.0</span></p>
+                </div>
+                <div id="calendar-bar" class="flex gap-6 mono text-[11px]"></div>
             </div>
-        `).join('');
+        </header>
 
-        // Battlefield
-        document.getElementById('daily-list').innerHTML = (state.dailyFocus || []).map(t => `
-            <li class="flex justify-between items-center bg-slate-950/40 p-4 rounded-lg border-l-4 border-cyan-500 animate-in fade-in">
-                <span class="text-sm font-light tracking-wide">${t.toUpperCase()}</span>
-                <button onclick="removeTask('${t}')" class="text-slate-700 hover:text-red-500 mono text-[9px] border border-slate-900 px-2 rounded">DISMISS</button>
-            </li>
-        `).join('') || '<li class="text-slate-800 text-center mono text-xs py-4 border border-dashed border-slate-900 rounded">SYSTEM_STANDBY</li>';
+        <main class="max-w-7xl mx-auto p-8 pt-12 pb-32">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                <div class="lg:col-span-5">
+                    <div class="glass-panel p-8 rounded-xl sticky top-36">
+                        <h2 class="mono text-[11px] uppercase tracking-[0.3em] text-cyan-400 mb-8 pb-4 border-b border-cyan-950">Active_Battlefield</h2>
+                        <ul id="daily-list" class="space-y-4 mb-10 min-h-[100px]"></ul>
+                        <input type="text" id="quick-add" placeholder="INPUT COMMAND..." 
+                               class="w-full bg-slate-900/50 border border-cyan-900/30 rounded-lg p-4 mono text-sm text-cyan-300 focus:outline-none focus:border-cyan-400 uppercase">
+                    </div>
+                </div>
 
-        // Bank
-        document.getElementById('category-grid').innerHTML = Object.entries(appData.taskBank).map(([cat, tasks]) => `
-            <div class="glass-panel p-6 rounded-xl">
-                <h3 class="mono text-[9px] text-cyan-500/40 mb-4 uppercase tracking-[0.2em]">${cat}</h3>
-                <div class="flex flex-wrap gap-2">
-                    ${tasks.map(t => `<button onclick="addTask('${t}')" class="text-[9px] border border-cyan-900/40 px-3 py-1.5 rounded text-slate-400 hover:text-cyan-400 hover:border-cyan-400 transition-colors uppercase">+ ${t}</button>`).join('')}
+                <div class="lg:col-span-7 space-y-12">
+                    <div id="category-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                    
+                    <div onclick="toggleMode('study')" class="glass-panel p-10 text-center cursor-pointer group hover:bg-cyan-500/10 rounded-xl border-dashed">
+                        <span class="mono tracking-[0.8em] text-cyan-500/40 group-hover:text-cyan-400 transition-all">INITIATE STUDY_PROTOCOL</span>
+                    </div>
+
+                    <div id="subscription-grid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-9 gap-3"></div>
                 </div>
             </div>
-        `).join('');
+        </main>
+    </div>
 
-        // Tools
-        document.getElementById('subscription-grid').innerHTML = appData.subscriptions.map(tool => `
-            <a href="${tool.url}" target="_blank" class="glass-panel aspect-square flex items-center justify-center text-[7px] mono text-slate-500 hover:text-cyan-400 p-1 text-center uppercase font-bold">
-                ${tool.name}
-            </a>
-        `).join('');
-
-        // Study Nodes - These now auto-trigger a question to Gemini
-        document.getElementById('study-nav').innerHTML = appData.study.map(s => `
-            <div onclick="document.getElementById('ai-input').value = 'Provide a brief review concept for: ${s.name}'; runGemini();" 
-                 class="text-[10px] mono text-slate-500 hover:text-cyan-400 cursor-pointer uppercase py-2 border-l border-transparent hover:border-cyan-400 pl-4 transition-all">
-                ${s.name}
-            </div>
-        `).join('');
+    <div id="study-view" class="hidden fixed inset-0 z-[1000] bg-slate-950 flex flex-col">
+        <header class="p-6 border-b border-cyan-900/50 flex justify-between items-center bg-slate-900/20 backdrop-blur-xl">
+            <h2 class="mono text-xs tracking-[0.4em] text-cyan-400">NEURAL_DEEP_WORK // ACTIVE</h2>
+            <button onclick="toggleMode('hub')" class="text-red-500 mono text-[10px] border border-red-900/30 px-6 py-2 hover:bg-red-500/10 rounded-full">EXIT_SESSION</button>
+        </header>
         
-        if(apiKey) {
-            document.getElementById('api-key').value = apiKey;
+        <div class="flex flex-1 overflow-hidden">
+            <aside class="w-72 border-r border-cyan-900/20 p-8 space-y-10 bg-slate-950/80">
+                <div>
+                    <h3 class="mono text-[10px] text-slate-500 mb-6 uppercase tracking-widest font-bold">Neural_Nodes</h3>
+                    <nav id="study-nav" class="space-y-4"></nav>
+                </div>
+                
+                <div class="glass-panel p-6 rounded-xl space-y-4 border-cyan-500/20">
+                    <h3 class="mono text-[9px] text-cyan-400/60 uppercase">Gemini_Link</h3>
+                    <input type="password" id="api-key" placeholder="PASTE_API_KEY..." 
+                           class="w-full bg-black/40 border border-cyan-900/50 rounded p-2 mono text-[9px] text-cyan-300">
+                    <button id="save-key-btn" class="w-full py-1 text-[8px] mono border border-cyan-900/50 text-slate-500 hover:text-cyan-400">SAVE_TO_VAULT</button>
+                </div>
+            </aside>
+
+            <section class="flex-1 flex flex-col p-12 relative">
+                <div class="max-w-4xl mx-auto w-full flex flex-col h-full space-y-6">
+                    <div id="chat-output" class="flex-1 glass-panel p-8 rounded-2xl overflow-y-auto space-y-4 mono text-[11px] leading-relaxed text-slate-300">
+                        <p class="text-cyan-500/50 italic">System Ready. Select a node or enter a query below.</p>
+                    </div>
+                    
+                    <div class="relative group">
+                        <textarea id="ai-input" rows="2" placeholder="COMMAND_GEMINI..." 
+                                  class="w-full bg-slate-900/80 border border-cyan-900/30 rounded-2xl p-6 mono text-sm text-cyan-300 focus:outline-none focus:border-cyan-400 resize-none"></textarea>
+                        <button id="send-btn" class="absolute right-6 bottom-6 text-cyan-400 hover:text-white mono text-xs uppercase tracking-widest">Execute_⏎</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script type="module">
+        // DIRECT BROWSER IMPORT - NO IMPORTMAP NEEDED
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        const appData = {
+            taskBank: {
+                work: ["Instagram – Light", "AI Course", "Outreach", "Email Wipe"],
+                chores: ["Deep Clean", "House Tidy", "Pets – Daily", "Laundry"],
+                clients: ["Client A", "Client B", "Strategy Sync"]
+            },
+            study: [
+                { name: "Mathematics", desc: "Logic & Quant structures" },
+                { name: "AI Specialization", desc: "Neural Architecture & LLMs" },
+                { name: "Language Protocol", desc: "Linguistic expansion" },
+                { name: "NotebookLM", desc: "Cross-reference Study Vault" }
+            ],
+            subscriptions: [
+                { name: "Perp", url: "https://www.perplexity.ai/" }, { name: "Open", url: "https://openai.com/" },
+                { name: "Bolt", url: "https://bolt.new/" }, { name: "Lova", url: "https://lovable.dev" },
+                { name: "Vapi", url: "https://dashboard.vapi.ai/" }, { name: "HeyG", url: "https://app.heygen.com/" },
+                { name: "Sonic", url: "https://app.writesonic.com/" }, { name: "Rete", url: "https://www.retellai.com/" },
+                { name: "n8n", url: "https://n8n.io/" }
+            ]
+        };
+
+        let state = JSON.parse(localStorage.getItem('gridTasks')) || { dailyFocus: [] };
+        let apiKey = localStorage.getItem('gemini_key') || '';
+
+        window.save = () => { localStorage.setItem('gridTasks', JSON.stringify(state)); render(); };
+
+        window.toggleMode = (mode) => {
+            document.getElementById('hub-view').classList.toggle('hidden', mode === 'study');
+            document.getElementById('study-view').classList.toggle('hidden', mode === 'hub');
+        };
+
+        window.runGemini = async () => {
+            const inputField = document.getElementById('ai-input');
+            const output = document.getElementById('chat-output');
+            const userKey = document.getElementById('api-key').value || apiKey;
+
+            if (!userKey) return alert("ACCESS_DENIED: API_KEY_REQUIRED");
+            if (!inputField.value || inputField.value === "PROCESSING...") return;
+
+            const userMsg = inputField.value;
+            output.innerHTML += `<div class="mb-4 border-l-2 border-slate-700 pl-4 py-2"><span class="text-slate-500">[USER]:</span> ${userMsg}</div>`;
+            inputField.value = "PROCESSING...";
+
+            try {
+                const genAI = new GoogleGenerativeAI(userKey);
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const result = await model.generateContent(userMsg);
+                const response = await result.response.text();
+                
+                output.innerHTML += `
+                    <div class="mb-4 bg-cyan-950/20 p-4 rounded-lg border border-cyan-500/10">
+                        <span class="text-cyan-400 font-bold">[GEMINI_SYSTEM]:</span><br>
+                        ${response.replace(/\n/g, '<br>')}
+                    </div>`;
+                output.scrollTop = output.scrollHeight;
+            } catch (err) {
+                output.innerHTML += `<div class="text-red-500 p-2 border border-red-900/50 rounded mb-4">CRITICAL_ERROR: ${err.message}</div>`;
+            } finally {
+                inputField.value = "";
+            }
+        };
+
+        window.addTask = (t) => { if(!state.dailyFocus.includes(t)) { state.dailyFocus.push(t); window.save(); } };
+        window.removeTask = (t) => { state.dailyFocus = state.dailyFocus.filter(x => x !== t); window.save(); };
+
+        function render() {
+            // Calendar
+            const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+            const today = days[new Date().getDay()];
+            document.getElementById('calendar-bar').innerHTML = days.map(day => `
+                <div class="flex flex-col items-center">
+                    <span class="${day === today ? 'text-cyan-400 font-bold' : 'text-slate-700'}">${day}</span>
+                    <div class="w-1 h-1 rounded-full mt-2 ${day === today ? 'bg-cyan-400' : 'bg-transparent'}"></div>
+                </div>
+            `).join('');
+
+            // Battlefield
+            document.getElementById('daily-list').innerHTML = (state.dailyFocus || []).map(t => `
+                <li class="flex justify-between items-center bg-slate-950/40 p-4 rounded-lg border-l-4 border-cyan-500">
+                    <span class="text-sm font-light tracking-wide">${t.toUpperCase()}</span>
+                    <button onclick="removeTask('${t}')" class="text-slate-700 hover:text-red-500 mono text-xs">X</button>
+                </li>
+            `).join('') || '<li class="text-slate-800 text-center mono text-xs py-4 border border-dashed border-slate-900 rounded">SYSTEM_IDLE</li>';
+
+            // Bank
+            document.getElementById('category-grid').innerHTML = Object.entries(appData.taskBank).map(([cat, tasks]) => `
+                <div class="glass-panel p-6 rounded-xl">
+                    <h3 class="mono text-[10px] text-cyan-500/40 mb-4 uppercase">${cat}</h3>
+                    <div class="flex flex-wrap gap-2">
+                        ${tasks.map(t => `<button onclick="addTask('${t}')" class="text-[10px] border border-cyan-900/40 px-3 py-1 rounded text-slate-400 hover:text-cyan-400 hover:border-cyan-400 transition-colors uppercase">+ ${t}</button>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            // Tools
+            document.getElementById('subscription-grid').innerHTML = appData.subscriptions.map(tool => `
+                <a href="${tool.url}" target="_blank" class="glass-panel aspect-square flex items-center justify-center text-[8px] mono text-slate-500 hover:text-cyan-400 p-1 text-center uppercase font-bold">
+                    ${tool.name}
+                </a>
+            `).join('');
+
+            // Study Nodes
+            document.getElementById('study-nav').innerHTML = appData.study.map(s => `
+                <div onclick="document.getElementById('ai-input').value = 'Brief review session for ${s.name}'; window.runGemini();" 
+                     class="text-[10px] mono text-slate-500 hover:text-cyan-400 cursor-pointer uppercase py-2 border-l border-transparent hover:border-cyan-400 pl-4 transition-all">
+                    ${s.name}
+                </div>
+            `).join('');
+            
+            if(apiKey) document.getElementById('api-key').value = apiKey;
         }
-    }
 
-    window.addTask = (t) => { if(!state.dailyFocus.includes(t)) { state.dailyFocus.push(t); save(); } };
-    window.removeTask = (t) => { state.dailyFocus = state.dailyFocus.filter(x => x !== t); save(); };
-    
-    document.getElementById('save-key-btn').onclick = () => {
-        const k = document.getElementById('api-key').value;
-        localStorage.setItem('gemini_key', k);
-        apiKey = k;
-        alert("VAULT_UPDATED");
-    };
+        document.getElementById('save-key-btn').onclick = () => {
+            const k = document.getElementById('api-key').value;
+            localStorage.setItem('gemini_key', k);
+            apiKey = k;
+            alert("VAULT_UPDATED");
+        };
 
-    document.getElementById('send-btn').onclick = runGemini;
-    document.getElementById('ai-input').addEventListener('keydown', (e) => { 
-        if(e.key === 'Enter' && !e.shiftKey) { 
-            e.preventDefault(); 
-            runGemini(); 
-        } 
-    });
-    
-    document.getElementById('quick-add').onkeypress = (e) => { 
-        if(e.key === 'Enter' && e.target.value) { 
-            addTask(e.target.value.trim()); 
-            e.target.value=''; 
-        } 
-    };
+        document.getElementById('send-btn').onclick = window.runGemini;
+        document.getElementById('ai-input').addEventListener('keydown', (e) => { 
+            if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.runGemini(); } 
+        });
+        
+        document.getElementById('quick-add').onkeypress = (e) => { 
+            if(e.key === 'Enter' && e.target.value) { 
+                window.addTask(e.target.value.trim()); 
+                e.target.value=''; 
+            } 
+        };
 
-    render();
-</script>
+        render();
+    </script>
+</body>
+</html>
